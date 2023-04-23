@@ -1,7 +1,6 @@
 class Graph:
-    def __init__(self, Vertices, Edges) -> None:
+    def __init__(self, Vertices) -> None:
         self.V = Vertices
-        self.E = Edges
         self.curSCC = 0
 
 class Vertex:
@@ -11,11 +10,6 @@ class Vertex:
         self.numSCC = 0
         self.outgoing = []
         self.incoming = []
-
-class Edge:
-    def __init__(self, tail, head) -> None:
-        self.tail = tail
-        self.head = head
 
 class Order:
     def __init__(self, n) -> None:
@@ -27,13 +21,8 @@ def printVertices(V):
     for v in V:
         print(v.value)
 
-def printEdges(E):
-    print('Edges:')
-    for e in E:
-        print(e.tail.value, '=>', e.head.value)
-        
 def createGraph(filename):
-    V, vSet, E = [], set(), []
+    V, vSet = [], set()
     with open(filename, 'r') as file:
         n = 0
         for line in file:
@@ -50,11 +39,9 @@ def createGraph(filename):
             i1, i2 = [int(x) for x in line.split()]
             v1 = V[i1-1]
             v2 = V[i2-1]
-            e = Edge(v1, v2)
-            E.append(e)
-            v1.outgoing.append(e)
-            v2.incoming.append(e)
-    return Graph(V,E) 
+            v1.outgoing.append(v2)
+            v2.incoming.append(v1)
+    return Graph(V) 
 
 """
 Topological sort orders the 'farthest' node from the start 
@@ -75,10 +62,10 @@ def reverseTopoSort(G):
 
 def topoDFS(startNode, magicOrder):
     startNode.explored = True
-    for e in startNode.incoming:
-        if e.tail.explored:
+    for v in startNode.incoming:
+        if v.explored:
             continue
-        topoDFS(e.tail, magicOrder)
+        topoDFS(v, magicOrder)
     magicOrder.arr[magicOrder.rank] = startNode
     magicOrder.rank -= 1
     return
@@ -99,8 +86,8 @@ def DFS_SCC(G, startNode):
         return
     startNode.explored = True
     startNode.numSCC = G.curSCC
-    for e in startNode.outgoing:
-        DFS_SCC(G, e.head)
+    for v in startNode.outgoing:
+        DFS_SCC(G, v)
     return
 
 def printSCCs(G):

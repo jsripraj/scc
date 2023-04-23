@@ -7,7 +7,7 @@ class Vertex:
     def __init__(self, value) -> None:
         self.value = value
         self.explored = False
-        self.numSCC = 0
+        self.numSCC = -1
         self.outgoing = []
         self.incoming = []
 
@@ -60,15 +60,25 @@ def reverseTopoSort(G):
         topoDFS(v, magicOrder)
     return magicOrder.arr
 
-def topoDFS(startNode, magicOrder):
-    startNode.explored = True
-    for v in startNode.incoming:
-        if v.explored:
-            continue
-        topoDFS(v, magicOrder)
-    magicOrder.arr[magicOrder.rank] = startNode
-    magicOrder.rank -= 1
-    return
+def topoDFS(v, magicOrder):
+    stack = [v]
+    while True:
+        v.explored = True
+        done = 0
+        for w in v.incoming:
+            if not w.explored:
+                break
+            done += 1
+        if done == len(v.incoming): # all neighbors already explored
+            magicOrder.arr[magicOrder.rank] = v
+            magicOrder.rank -= 1
+            stack.pop()
+            if not stack:
+                return
+            v = stack[-1]
+        else:
+            stack.append(w)
+            v = w
 
 def kosaraju(G):
     magicOrder = reverseTopoSort(G)
@@ -81,14 +91,24 @@ def kosaraju(G):
         DFS_SCC(G, v)
     return
 
-def DFS_SCC(G, startNode):
-    if startNode.explored:
-        return
-    startNode.explored = True
-    startNode.numSCC = G.curSCC
-    for v in startNode.outgoing:
-        DFS_SCC(G, v)
-    return
+def DFS_SCC(G, v):
+    stack = [v]
+    while True:
+        v.explored = True
+        done = 0
+        for w in v.outgoing:
+            if not w.explored:
+                break
+            done += 1
+        if done == len(v.outgoing):
+            v.numSCC = G.curSCC
+            stack.pop()
+            if not stack:
+                return
+            v = stack[-1]
+        else:
+            stack.append(w)
+            v = w
 
 def printSCCs(G):
     SCCs = {}
@@ -119,7 +139,7 @@ def fiveLargestSCCSizes(G):
 
 
 
-filename = 'test1.txt'
+filename = 'SCC.txt'
 G = createGraph(filename)
 kosaraju(G)
 answer = fiveLargestSCCSizes(G)
